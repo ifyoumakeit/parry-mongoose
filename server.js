@@ -1,13 +1,12 @@
 var bodyParser                = require("body-parser"),
     express                   = require("express"),
-    Room                      = require("./model"),
     mongoose                  = require('mongoose'),
-    _                         = require('lodash'),
+    Models                    = require("./model"),
     settings                  = require('./settings');
 
     // Models
 
-    mongoose.connect(process.env.MONGOLAB_URI, function (error) {
+    mongoose.connect(process.env.MONGOLAB_URI, (error) => {
       if (error) console.error(error);
       else console.log('mongo connected');
     });
@@ -16,33 +15,32 @@ var bodyParser                = require("body-parser"),
     .use(bodyParser.json())
     .use(bodyParser.urlencoded({ extended: true }))
 
-    .get("/api", function (req, res) {
+    .get("/api", (req, res) => {
       res.json(200, {msg: "OK" });
     })
 
     ////////////////////////////////////////////////////////////////////////////
     // HIPCHAT
 
-    .post("/api/hipchat", function(req, res){
+    .post("/api/hipchat", (req, res) => {
 
-      var printSuccess = function(message){
+      var printSuccess = (message) => {
         return res.status(200).json({
           "color": "green",
-          "message": ":) " + message,
+          "message": `:) ${message}`,
           "notify": false,
           "message_format": "text"
         });
       },
-      printError = function(message){
+      printError = (message) => {
         return res.status(200).json({
           "color": "red",
-          "message": ":( " + message,
-          "notify": false,
+          "message": `:( ${message}`,
+          "notify": true,
           "message_format": "text"
         });
       },
-      printMsg = function(msgSuccess, msgError, err){
-        console.log(arguments);
+      printMsg = (msgSuccess, msgError, err) => {
         return err ? printError(msgError) : printSuccess(msgSuccess);
       }
 
@@ -50,6 +48,7 @@ var bodyParser                = require("body-parser"),
       try {
         var command = "/parry";
 
+        // Message data
         var messageObj = req.body.item.message,
           message = messageObj.message.substr(command.length + 1),
           userId = messageObj.from.id,
@@ -58,40 +57,44 @@ var bodyParser                = require("body-parser"),
           words = message.split(" "),
           action = words.shift();
 
+        // Room data
         var roomObj = req.body.item.room,
             roomId = roomObj.id,
             roomName = roomObj.name;
 
+        // Date data
+        var date = new Date(),
+            now = new Date(),
+            today5PM = date.setUTCHours(17, 0 , 0, 0),
+            yesterday5PM = date.setUTCDate(date.getUTCDate() - 1)
+            twodaysago5PM = date.setUTCDate(date.getUTCDate() - 1)
+            tomorrow5PM = date.setUTCDate(date.getUTCDate() + 3);
+
 
       } catch(err) {
-        printError("Malformed request. " + err)
+        printError(`Malformed request. ${err}`)
       }
 
+      Models.room.findOneAndUpdate({id: roomId}, {name: roomName}, {upsert: true, new: true}, (err, room) => {
 
+        var findUser = (funcSuccess, funcError) => {
+          var userIndex = room.users.findIndex((user) => { return user.id === userId; })
+          if(userIndex > -1){
+            return funcSuccess(userIndex);
+          } else {
+            if(typeof funcError === "function") {
+              return funcError(userIndex);
+            }
+            else {
+              return printError(`${userMentionName} not a member`);
+            }
+          }
+        }
 
         switch(action){
-          case "add":
-            Room.findOne({id: roomId}, function(err, room){
-              if(err){
-                printError("Room error!")
-              }
-
-              if(!room.length){
-                room.name = roomName;
-                room.save(printMsg.bind("Room name added", "Room name failed"))
-              } else {
-                printError("Room not found!")
-              }
-
-            });
-            break;
-
-          case "update":
-            Room.findOneAndUpdate({id: roomId}, {name: roomName}, {upsert: true},
-              printMsg.bind("Room name updated", "Room name failed"));
-            break;
 
           case "join":
+          case "update":
 
             var email = words[0];
 
@@ -106,39 +109,115 @@ var bodyParser                = require("body-parser"),
               return;
             }
 
-            var query = {
-                  "id": roomId,
-                  "users.id": userId
-                },
-                update = {
-                  $push: {
-                    "users": {
-                      "email": email,
-                      "id": userId,
-                      "name": userName,
-                      "mention_name": userName,
-                    }
-                  }
-                },
-                options = {
-                  "safe": true,
-                  "new": true,
-                  "upsert": true
-                };
+            findUser((userIndex) => {
+              var user = room.users[userIndex];
+              user.email = email;
+              user.name = userName;
+              user.mentionName = userMentionName;
+              room.save(printMsg.bind(this, `${userMentionName} updated`, `${userMentionName} update failed`));
+            },(user) => {
+              // Add user
+              room.users.push(new Models.user({
+                "email": email,
+                "id": userId,
+                "name": userName,
+                "mention_name": userMentionName
+              }))
+              room.save(printMsg.bind(this, `${userMentionName} added to ${roomName}`, `${userMentionName} add failed`));
+            });
+            break;
 
-            Room.findOneAndUpdate(query, update, options, function(err, room){
-              if(err){
-                console.log(err, "??");
+          case "leave":
+            findUser((userIndex) => {
+              // Remove user
+              room.users.splice(userIndex, 1);
+              room.save(printMsg.bind(this, `${userMentionName} left ${roomName}`, `${userMentionName} update failed`));
+            });
+            break;
+
+          case "post":
+          case "repost":
+            var url = words.shift(),
+                description = words.join(" ");
+
+            if(_.isEmpty(url)){
+              printError("Missing link");
+              return;
+            }
+
+            var re = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+            if(!re.test(url)){
+              printError("Link invalid");
+              return;
+            }
+
+            findUser((userIndex) => {
+              var user = room.users[userIndex];
+              var linkIndex = user.links.findIndex((link) => { return link.url === url });
+              if(linkIndex === -1 || action === "repost"){
+                user.links.push(new Models.link({
+                  "url": url,
+                  "description": description
+                }));
+                room.save(printMsg.bind(this, `${userMentionName} ${action}ed ${url}`, `${userMentionName} ${action} failed`));
               } else {
-                console.log(room, "!!");
+                printError(`${url} already posted, use repost to force`);
+              }
+            });
+            break;
+
+          case "current":
+          case "previous":
+            if(room.users.length){
+
+              var range = {};
+              if(action === "previous") {
+                range = now < today5PM ? [twodaysago5PM, yesterday5PM] : [yesterday5PM, today5PM];
+              } else {
+                range = now < today5PM ? [yesterday5PM, today5PM] : [today5PM, tomorrow5PM];
               }
 
-              printSuccess("!");
+              var output = room.users.reduce((memo, user) => {
+                var links = user.links.reduce((links, link) => {
+                  var date = link.createdAt.getTime();
+                  return date < range[0] || date > range[1] ? links : `${links} \n ${link.url}`;
+                }, '');
+
+                return `${memo} \n ${userMentionName} ${links}`;
+              }, '');
+
+              if(output !== '') {
+                printSuccess(`${action} digest: ${output}`);
+              } else {
+                printError(`No links in ${action} digest`);
+              }
+
+            } else {
+              printError(`No users in room.`);
+            }
+            break;
+
+          case "mine":
+            findUser((userIndex) => {
+              var user = room.users[userIndex];
+              var range = range = now < today5PM ? [yesterday5PM, today5PM] : [today5PM, tomorrow5PM];
+              if(user.links.length){
+                var output = user.links.reduce((memo, link, index) => {
+                  var date = link.createdAt.getTime();
+                  return date < range[0] || date > range[1] ? links : `${links} \n ${link.url}`;
+                }, '');
+                printSuccess(output);
+              } else {
+                printError(`Nothing posted today.`);
+              }
             });
+            break;
 
-          break;
+          default:
+            printError(`Action '${action}' is not valid`);
+
         }
-
+      });
 
     })
     .use(express.static(__dirname + "/"))

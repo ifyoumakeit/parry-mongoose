@@ -102,7 +102,7 @@ var bodyParser                = require("body-parser"),
 
             var email = words[0];
 
-            if(!email.length){
+            if(!email){
               printError("Missing email");
               return;
             }
@@ -144,7 +144,7 @@ var bodyParser                = require("body-parser"),
             var url = words.shift(),
                 description = words.join(" ");
 
-            if(!url.length){
+            if(!url){
               printError("Missing link");
               return;
             }

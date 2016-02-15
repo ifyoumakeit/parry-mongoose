@@ -187,7 +187,7 @@ var bodyParser                = require("body-parser"),
                   return date < range[0] || date > range[1] ? links : `${links} \n ${link.url}`;
                 }, '');
 
-                return `${memo} \n ${userMentionName} ${links}`;
+                return links !== '' ? `${memo} \n ${userMentionName} ${links}` : memo;
               }, '');
 
               if(output !== '') {

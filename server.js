@@ -22,7 +22,7 @@ var bodyParser                = require("body-parser"),
     ////////////////////////////////////////////////////////////////////////////
     // HIPCHAT
 
-    .post("/api/hipchat", (req, res) => {
+    .post("/api", (req, res) => {
 
       var printSuccess = (message) => {
         return res.status(200).json({

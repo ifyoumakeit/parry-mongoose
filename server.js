@@ -27,7 +27,7 @@ var bodyParser                = require("body-parser"),
       var printSuccess = (message) => {
         return res.status(200).json({
           "color": "green",
-          "message": `Parry: ${message}`,
+          "message": `(successful) ${message}`,
           "notify": false,
           "message_format": "text"
         });
@@ -35,7 +35,7 @@ var bodyParser                = require("body-parser"),
       printError = (message) => {
         return res.status(200).json({
           "color": "red",
-          "message": `Parry: ${message}`,
+          "message": `(failed) ${message}`,
           "notify": true,
           "message_format": "text"
         });

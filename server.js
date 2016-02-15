@@ -27,7 +27,7 @@ var bodyParser                = require("body-parser"),
       var printSuccess = (message) => {
         return res.status(200).json({
           "color": "green",
-          "message": `:) ${message}`,
+          "message": `Parry: ${message}`,
           "notify": false,
           "message_format": "text"
         });
@@ -35,7 +35,7 @@ var bodyParser                = require("body-parser"),
       printError = (message) => {
         return res.status(200).json({
           "color": "red",
-          "message": `:( ${message}`,
+          "message": `Parry: ${message}`,
           "notify": true,
           "message_format": "text"
         });
@@ -92,6 +92,10 @@ var bodyParser                = require("body-parser"),
         }
 
         switch(action){
+
+          case "":
+            printSuccess("Available commands: join, update, leave, post, repost, current, previous, mine");
+            break;
 
           case "join":
           case "update":

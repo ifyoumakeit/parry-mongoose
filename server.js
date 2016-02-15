@@ -94,7 +94,7 @@ var bodyParser                = require("body-parser"),
         switch(action){
 
           case "":
-            printSuccess("Available commands: join, update, leave, post, repost, current, previous, mine");
+            printSuccess("Available commands: \njoin, update, leave, post, repost, current, previous, mine");
             break;
 
           case "join":
@@ -102,7 +102,7 @@ var bodyParser                = require("body-parser"),
 
             var email = words[0];
 
-            if(_.isEmpty(email)){
+            if(!email.length){
               printError("Missing email");
               return;
             }
@@ -144,7 +144,7 @@ var bodyParser                = require("body-parser"),
             var url = words.shift(),
                 description = words.join(" ");
 
-            if(_.isEmpty(url)){
+            if(!url.length){
               printError("Missing link");
               return;
             }

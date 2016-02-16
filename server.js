@@ -93,8 +93,8 @@ var bodyParser                = require("body-parser"),
 
         switch(action){
 
-          case "message":
-            printSuccess(JSON.stringify(messageObj))
+          case "req.body":
+            printSuccess(JSON.stringify(req.body, null, 2))
             break
 
           case "":

@@ -93,18 +93,23 @@ var bodyParser                = require("body-parser"),
 
         switch(action){
 
+          case "time":
+            printSuccess(messageObj.date)
+            break
+
           case "":
           case "help":
             printSuccess(`Available commands:
-              join {email}     -> Join room with email
-              update {email}   -> Change room email address
-              leave            -> Leave room
-              post {url}       -> Post link
-              repost {url}     -> Force post old link
-              Current          -> Show current digest
-              previous         -> Show previous digest
-              mine             -> See your current links
-              me               -> See your information
+
+                join {email}
+                update {email}
+                leave
+                post {url}
+                repost {url}
+                current
+                previous
+                mine
+                me
             `);
             break;
 
@@ -234,6 +239,7 @@ var bodyParser                = require("body-parser"),
             findUser((userIndex) => {
               var user = room.users[userIndex];
               printSuccess(`Your infomation:
+
                 Name: ${userName}
                 Mention Name: ${userMentionName}
                 Email: ${user.email}

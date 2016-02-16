@@ -94,7 +94,7 @@ var bodyParser                = require("body-parser"),
         switch(action){
 
           case "time":
-            printSuccess(messageObj.date)
+            printSuccess(messageObj)
             break
 
           case "":

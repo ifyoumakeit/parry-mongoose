@@ -95,17 +95,16 @@ var bodyParser                = require("body-parser"),
 
           case "":
           case "help":
-            printSuccess(`
-              Available commands: \n
-              join {email}:\t-> Join room with email
-              update {email}\t-> Change room email address
-              leave\t-> Leave room
-              post {url}\t-> Post link
-              repost {url}\t-> Force post old link
-              current\t-> Show current digest
-              previous\t-> Show previous digest
-              mine\t-> See your current links
-              me\t-> See your information
+            printSuccess(`Available commands:
+              join {email}     -> Join room with email
+              update {email}   -> Change room email address
+              leave            -> Leave room
+              post {url}       -> Post link
+              repost {url}     -> Force post old link
+              Current          -> Show current digest
+              previous         -> Show previous digest
+              mine             -> See your current links
+              me               -> See your information
             `);
             break;
 
@@ -235,10 +234,10 @@ var bodyParser                = require("body-parser"),
             findUser((userIndex) => {
               var user = room.users[userIndex];
               printSuccess(`Your infomation:
-                \n Name: ${userName}
-                \n Mention Name: ${userMentionName}
-                \n Email: ${user.email}
-                \n Links: ${user.links.length}
+                Name: ${userName}
+                Mention Name: ${userMentionName}
+                Email: ${user.email}
+                Links: ${user.links.length}
               `);
             });
             break;

@@ -94,7 +94,19 @@ var bodyParser                = require("body-parser"),
         switch(action){
 
           case "":
-            printSuccess("Available commands: \njoin, update, leave, post, repost, current, previous, mine");
+          case "help":
+            printSuccess(`
+              Available commands: \n
+              join {email}:\t-> Join room with email
+              update {email}\t-> Change room email address
+              leave\t-> Leave room
+              post {url}\t-> Post link
+              repost {url}\t-> Force post old link
+              current\t-> Show current digest
+              previous\t-> Show previous digest
+              mine\t-> See your current links
+              me\t-> See your information
+            `);
             break;
 
           case "join":
@@ -206,14 +218,28 @@ var bodyParser                = require("body-parser"),
               var user = room.users[userIndex];
               var range = range = now < today5PM ? [yesterday5PM, today5PM] : [today5PM, tomorrow5PM];
               if(user.links.length){
-                var output = user.links.reduce((memo, link, index) => {
+                var output = user.links.reduce((links, link, index) => {
                   var date = link.createdAt.getTime();
-                  return date < range[0] || date > range[1] ? links : `${links} \n ${link.url}`;
+                  var hours = link.createdAt.getHours();
+                  var time = hours > 12 ? `${hours - 12}:${link.createdAt.getMinutes()} PM` : `${hours}:${link.createdAt.getMinutes()} AM`;
+                  return date < range[0] || date > range[1] ? links : `${links} ${link.url} @ ${time}\n`;
                 }, '');
-                printSuccess(output);
+                printSuccess(`Current links:\n ${output}`);
               } else {
                 printError(`Nothing posted today.`);
               }
+            });
+            break;
+
+          case "me":
+            findUser((userIndex) => {
+              var user = room.users[userIndex];
+              printSuccess(`Your infomation:
+                \n Name: ${userName}
+                \n Mention Name: ${userMentionName}
+                \n Email: ${user.email}
+                \n Links: ${user.links.length}
+              `);
             });
             break;
 

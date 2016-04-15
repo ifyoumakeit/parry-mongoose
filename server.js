@@ -203,7 +203,7 @@ var bodyParser                = require("body-parser"),
                   return date < range[0] || date > range[1] ? links : `${links} \n ${link.url}`;
                 }, '');
 
-                return links !== '' ? `${memo} \n ${userMentionName} ${links}` : memo;
+                return links !== '' ? `${memo} \n ${user.mentionName} ${links}` : memo;
               }, '');
 
               if(output !== '') {
@@ -239,11 +239,10 @@ var bodyParser                = require("body-parser"),
             findUser((userIndex) => {
               var user = room.users[userIndex];
               printSuccess(`Your infomation:
-
-                Name: ${userName}
-                Mention Name: ${userMentionName}
-                Email: ${user.email}
-                Links: ${user.links.length}
+              Name: ${userName}
+              Mention Name: ${userMentionName}
+              Email: ${user.email}
+              Links: ${user.links.length}
               `);
             });
             break;

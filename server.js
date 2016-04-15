@@ -46,7 +46,7 @@ var bodyParser                = require("body-parser"),
 
       // Make sure data is there
       try {
-        var command = "/parry";
+        var command = settings.command;
 
         // Message data
         var messageObj = req.body.item.message,
@@ -73,6 +73,10 @@ var bodyParser                = require("body-parser"),
 
       } catch(err) {
         printError(`Malformed request. ${err}`)
+      }
+
+      if(messageObj.message.substr(0, command.length) !== command){
+        printError(`${command} must be at beginning of line.`)
       }
 
       Models.room.findOneAndUpdate({id: roomId}, {name: roomName}, {upsert: true, new: true}, (err, room) => {

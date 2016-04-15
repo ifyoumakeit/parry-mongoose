@@ -1,5 +1,5 @@
 module.exports = {
-  command: "/parry",
+  command: "/:",
   actions: [
     "add",
     "digest",
